@@ -1,0 +1,49 @@
+# ═══════════════════════════════════════════════════════════════════════
+#  Зеркало подписок: s1250022.ha006.t.mydomain.zone → zerosan.alwaysdata.net
+#  Бот, база и license.php живут на alwaysdata. Здесь только пересылка.
+#
+#  ВАЖНО: пересылка идёт средствами самого веб-сервера ([P]), без PHP.
+#  Раньше каждый запрос поднимал lsphp и держал его всё время обращения к
+#  origin, а TCP-коннект до alwaysdata периодически занимает до 5 с (теряются
+#  SYN). При всплесках (наблюдался 37 запросов в секунду) пул воркеров
+#  аккаунта исчерпывался: LiteSpeed принимал TCP и не отдавал его PHP —
+#  клиент видел таймаут, TLS не завершался. Замер 12 параллельных запросов:
+#  через proxy.php lsphp 3→13, медиана 1.55 с; через [P] lsphp не растёт,
+#  медиана 0.51 с. proxy.php оставлен на диске как аварийный откат.
+# ═══════════════════════════════════════════════════════════════════════
+
+Options -Indexes -MultiViews
+AddDefaultCharset UTF-8
+
+# Dotfiles наружу не отдаём (.htaccess, .user.ini, .env и т.п.)
+<FilesMatch "^\.">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+<IfModule mod_headers.c>
+    # Host — чтобы alwaysdata отдал нужный vhost, а не "Site not found".
+    RequestHeader set Host "zerosan.alwaysdata.net"
+    # Реальный IP клиента + общий секрет: license.php подставит его в REMOTE_ADDR.
+    RequestHeader set X-Fwd-Ip "%{REMOTE_ADDR}s"
+    RequestHeader set X-Fwd-Secret "968f6dacaf5292b98bef45591d73e0402a13cb8884c8bb7a"
+    RequestHeader set X-Fwd-Proto "https"
+    RequestHeader set X-Fwd-Host "s1250022.ha006.t.mydomain.zone"
+    Header set X-Mirror "s1250022.ha006.t.mydomain.zone"
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Админский бот и модуль БД через зеркало недоступны.
+    RewriteRule (^|/)(bot|db)\.php$ - [F,L]
+
+    # Всё остальное прозрачно уходит на origin силами веб-сервера.
+    RewriteRule ^(.*)$ https://zerosan.alwaysdata.net/$1 [P,QSA,L]
+</IfModule>

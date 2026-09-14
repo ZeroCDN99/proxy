@@ -1,0 +1,8 @@
+; Подняты лимиты под длинные цепочки запросов бота (создание клиента, массовые операции)
+max_execution_time = 120
+max_input_time = 120
+memory_limit = 512M
+default_charset = "UTF-8"
+display_errors = Off
+log_errors = On
+error_log = /home/s1250022/php_errors.log
