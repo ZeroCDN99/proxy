@@ -1,4 +1,4 @@
-:{$PORT} {
+:{$PORT:80} {
     # Защита: запрет прямого вызова бота и базы данных
     @blocked path /bot.php* /db.php*
     respond @blocked 403
