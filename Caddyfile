@@ -1,17 +1,17 @@
 :{$PORT:80} {
-    # 1. Запрет прямого доступа к боту и базе данных
+    # 1. Запрет прямого доступа к боту и базе данных[span_0](start_span)[span_0](end_span)[span_1](start_span)[span_1](end_span)
     @blocked path /bot.php* /db.php*
     respond @blocked 403
 
-    # 2. Отсечение ботов и сканеров: если нет параметра token, сразу отдаем OK без обращения к Alwaysdata
+    # 2. Отсечение ботов и сканеров без токена (сразу 200 OK без нагрузки на Worker)
     @notoken {
         not query token=*
     }
     respond @notoken "OK" 200
 
-    # 3. Обратный прокси через IPv6 Alwaysdata в обход блокировки IPv4
-    reverse_proxy https://[2a00:b6e0:1:20:19::1]:443 {
-        header_up Host zerosan.alwaysdata.net
+    # 3. Проксирование через Cloudflare Worker на Alwaysdata[span_2](start_span)[span_2](end_span)[span_3](start_span)[span_3](end_span)
+    reverse_proxy https://dawn-credit-4072.lonerlonely78.workers.dev {
+        header_up Host dawn-credit-4072.lonerlonely78.workers.dev
         header_up X-Fwd-Ip {remote_host}
         header_up X-Fwd-Secret "968f6dacaf5292b98bef45591d73e0402a13cb8884c8bb7a"
         header_up X-Fwd-Proto "https"
@@ -20,8 +20,7 @@
 
         transport http {
             tls
-            tls_server_name zerosan.alwaysdata.net
-            dial_timeout 5s
+            dial_timeout 10s
         }
     }
 }
