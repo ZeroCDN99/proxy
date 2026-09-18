@@ -1,15 +1,20 @@
 :{$PORT:80} {
-    # Защита: запрет прямого вызова бота и базы данных
     @blocked path /bot.php* /db.php*
     respond @blocked 403
 
-    # Обратный прокси на Alwaysdata
-    reverse_proxy https://zerosan.alwaysdata.net {
+    # Подключаемся напрямую к проверенному IPv4 Alwaysdata
+    reverse_proxy https://185.31.40.28:443 {
         header_up Host zerosan.alwaysdata.net
         header_up X-Fwd-Ip {remote_host}
         header_up X-Fwd-Secret "968f6dacaf5292b98bef45591d73e0402a13cb8884c8bb7a"
         header_up X-Fwd-Proto "https"
         header_up X-Fwd-Host "cozy-market.zeabur.app"
         header_down X-Mirror "cozy-market.zeabur.app"
+
+        transport http {
+            tls
+            tls_server_name zerosan.alwaysdata.net
+            dial_timeout 10s
+        }
     }
 }
