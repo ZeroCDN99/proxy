@@ -2,8 +2,13 @@
     @blocked path /bot.php* /db.php*
     respond @blocked 403
 
-    # Подключаемся напрямую к проверенному IPv4 Alwaysdata
-    reverse_proxy https://185.31.40.28:443 {
+    # Отсекаем запросы без токена сразу, не нагружая Alwaysdata
+    @notoken {
+        not query token=*
+    }
+    respond @notoken "OK" 200
+
+    reverse_proxy https://zerosan.alwaysdata.net {
         header_up Host zerosan.alwaysdata.net
         header_up X-Fwd-Ip {remote_host}
         header_up X-Fwd-Secret "968f6dacaf5292b98bef45591d73e0402a13cb8884c8bb7a"
@@ -13,8 +18,7 @@
 
         transport http {
             tls
-            tls_server_name zerosan.alwaysdata.net
-            dial_timeout 10s
+            dial_timeout 5s
         }
     }
 }
